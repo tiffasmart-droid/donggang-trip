@@ -22,7 +22,7 @@ function checkNet(net){
   assert(after.every(n=>n===0));assert.equal(tx.length,optimalCount(net));
 }
 const split=core.calculate([row('a',100)]);
-assert.deepEqual(split.net,[80,-20,-20,-20,-20]);assert.equal(split.tx.length,4);
+assert.deepEqual(split.net,[80,-20,-20,-20,-20]);assert.equal(split.tx.length,4);assert.deepEqual(split.paid,[100,0,0,0,0]);assert.deepEqual(split.shares,[20,20,20,20,20]);
 assert.deepEqual(core.calculate([row('a',0.01)]).net,[0,0,0,0,0]);
 assert.equal(core.calculate([row('a',100.01)]).net.reduce((a,b)=>Math.round((a+b)*100)/100,0),0);
 for(const value of [0,-1,Infinity,NaN,'1.001','1e3','100000001'])assert.throws(()=>core.cents(value));
@@ -65,13 +65,17 @@ function mock(){
 
   // Lightweight DOM contract tests, without launching a browser.
   const elements=new Map();
-  function element(id){if(!elements.has(id))elements.set(id,{innerHTML:'',textContent:'',value:'0',disabled:false,children:[],classList:{add(){},remove(){},toggle(){}},appendChild(e){this.children.push(e)},setAttribute(){}});return elements.get(id)}
-  const document={getElementById:element,createElement:()=>({value:'',setAttribute(){}}),querySelectorAll:()=>[],querySelector:()=>null,addEventListener(){},visibilityState:'visible'};
+  function element(id){if(!elements.has(id))elements.set(id,{innerHTML:'',textContent:'',value:'0',disabled:false,children:[],dataset:{},classList:{add(){},remove(){},toggle(){}},appendChild(e){this.children.push(e)},setAttribute(){}});return elements.get(id)}
+  const document={body:{dataset:{}},getElementById:element,createElement:()=>({value:'',dataset:{},setAttribute(){}}),querySelectorAll:()=>[],querySelector:()=>null,addEventListener(){},visibilityState:'visible'};
   const ctx={document,window:{addEventListener(){},scrollTo(){}},navigator:{onLine:true},localStorage:{getItem(){return null},setItem(){}},supabase:{createClient:()=>client},TRIP_CONFIG:{url:'https://example.test',publishableKey:'test',room:'0912',names:['粉粉','旅伴2','旅伴3','旅伴4','旅伴5']},TripCore:core,TripStore:{createStore:()=>({refresh(){},close(){}})},setInterval(){},alert(){},console,URL,crypto,AbortSignal,fetch};
-  vm.createContext(ctx);vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../app.js'),'utf8'),ctx);
+  vm.createContext(ctx);vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../icons.js'),'utf8'),ctx);vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../app.js'),'utf8'),ctx);
   vm.runInContext('joinRoom();currentPayer=3;renderAll();selected[1]=false;renderPeople()',ctx);
   assert.equal(element('payer').value,3);
   vm.runInContext('expenses=[{id:"x",title:"<img onerror=alert(1)>",amount:100,payer:0,participants:[0,1],category:"餐飲"}];renderAll()',ctx);
   assert(element('expensesList').innerHTML.includes('&lt;img'));
+  assert.equal(element('myPaid').textContent,'NT$100');
+  assert.equal(element('myShare').textContent,'NT$50');
+  assert(element('spendingBars').innerHTML.includes('NT$50'));
+  assert(element('transferCount').textContent.includes('1 筆'));
   console.log('PASS: frontend initializes and renders, payer preserved across updates, database text escaped');
 })().catch(e=>{console.error(e);process.exitCode=1});

@@ -31,16 +31,16 @@
     return best || [];
   }
   function calculate(expenses) {
-    const net = Array(5).fill(0); let total = 0;
+    const net = Array(5).fill(0), paid = Array(5).fill(0), shares = Array(5).fill(0); let total = 0;
     for (const e of expenses) {
       validate(e);
       const amount = cents(e.amount), people = [...e.participants].sort((a,b) => a-b);
-      total += amount; net[e.payer] += amount;
+      total += amount; net[e.payer] += amount; paid[e.payer] += amount;
       const each = Math.floor(amount / people.length), extra = amount % people.length;
-      people.forEach((id, index) => net[id] -= each + (index < extra ? 1 : 0));
+      people.forEach((id, index) => {const share = each + (index < extra ? 1 : 0); net[id] -= share; shares[id] += share;});
     }
     if (!Number.isSafeInteger(total)) throw new Error('帳目總金額超出安全計算範圍。');
-    return { total: total / 100, net: net.map(n => n / 100), tx: minimumTransfers(net) };
+    return { total: total / 100, net: net.map(n => n / 100), paid: paid.map(n=>n/100), shares: shares.map(n=>n/100), tx: minimumTransfers(net) };
   }
   root.TripCore = { cents, validate, calculate, minimumTransfers };
   if (typeof module !== 'undefined') module.exports = root.TripCore;

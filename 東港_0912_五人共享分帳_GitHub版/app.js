@@ -1,4 +1,5 @@
 const avatars=["🐟","🐱","🐢","🦀","🐦"];
+const personColors=["#64b6f5","#ff9eb6","#9ad5af","#ffb195","#b0bfd5"];
 let names=[...TRIP_CONFIG.names];
 let room=null, me=0, expenses=[], selected=[true,true,true,true,true];
 let store=null, ready=false, busy=false, currentPayer=0, pendingDraft=null;
@@ -11,6 +12,7 @@ function setStatus(text, good){
   document.getElementById('conn').textContent=text;
   document.getElementById('syncStatus').textContent=text;
   if(good!==null) ready=good;
+  document.querySelector('.sync-line')?.classList.toggle('error',good===false);
   updateButtons();
 }
 function updateButtons(){
@@ -37,7 +39,7 @@ function joinRoom(){
   document.getElementById('roomCodeMore').textContent=room;
   setStatus('讀取帳目中…',false);
   renderAll();
-  store=TripStore.createStore(client,room,rows=>{expenses=rows;renderAll()},setStatus);
+  store=TripStore.createStore(client,room,rows=>{if(JSON.stringify(rows)!==JSON.stringify(expenses)){expenses=rows;renderAll()}},setStatus);
   store.refresh();
 }
 function leaveRoom(){
@@ -49,6 +51,7 @@ function leaveRoom(){
   showTab('home');
 }
 function showTab(tab){
+  document.body.dataset.view=tab;
   ["home","add","list","settle","more"].forEach(t=>{
     document.getElementById("tab-"+t).classList.toggle("hidden",t!==tab);
     const el=document.querySelector(`[data-tab="${t}"]`);
@@ -58,26 +61,32 @@ function showTab(tab){
 }
 async function copyInvite(){
   const url=new URL('./',location.href).href;
-  const text='東港 9/12 五人共享分帳 🐟\n房間碼：0912\n'+url;
+  const text='東港五人共享分帳 🐟\n房間碼：0912\n'+url;
   try{await navigator.clipboard.writeText(text);alert('邀請文字已複製')}catch{prompt('請複製以下邀請文字',text)}
 }
+function avatarHTML(i){return '<span class="avatar" aria-hidden="true"><img src="./assets/avatar-'+i+'.svg" alt=""></span>'}
+function personHTML(i){return avatarHTML(i)+esc(names[i])}
 function renderPeople(){
-  const holder=document.getElementById("memberCards");holder.innerHTML="";
-  names.forEach((n,i)=>holder.innerHTML+=`<div class="person"><span class="avatar">${avatars[i]}</span>${esc(n)}</div>`);
-  const split=document.getElementById("splitPeople");split.innerHTML="";
-  names.forEach((n,i)=>{
-    const b=document.createElement("button"); b.className="person "+(selected[i]?"active":"");
-    b.innerHTML=`<span class="avatar">${avatars[i]}</span>${esc(n)}`;
-    b.setAttribute("aria-pressed",String(selected[i])); b.onclick=()=>{selected[i]=!selected[i];renderPeople()}; split.appendChild(b);
-  });
-  const payer=document.getElementById("payer"); payer.innerHTML="";
-  names.forEach((n,i)=>{let o=document.createElement("option");o.value=i;o.textContent=`${avatars[i]} ${n}`;payer.appendChild(o)});
-  payer.value=currentPayer; payer.onchange=()=>{currentPayer=Number(payer.value)};
+  const holder=document.getElementById('memberCards');holder.innerHTML='';
+  names.forEach((n,i)=>{const d=document.createElement('div');d.className='person'+(i===me?' active':'');d.dataset.person=i;d.innerHTML=personHTML(i);holder.appendChild(d)});
+  for(const [id,isSplit] of [['payerPeople',false],['splitPeople',true]]){
+    const target=document.getElementById(id);target.innerHTML='';
+    names.forEach((n,i)=>{const b=document.createElement('button');const checked=isSplit?selected[i]:currentPayer===i;b.className='person'+(checked?' active':'');b.dataset.person=i;b.innerHTML=personHTML(i);b.setAttribute('aria-pressed',String(checked));b.setAttribute('aria-label',(isSplit?'分攤對象：':'付款人：')+n);b.onclick=()=>{if(isSplit)selected[i]=!selected[i];else currentPayer=i;renderPeople()};target.appendChild(b)});
+  }
+  const payer=document.getElementById('payer');payer.innerHTML='';
+  names.forEach((n,i)=>{const o=document.createElement('option');o.value=i;o.textContent=n;payer.appendChild(o)});payer.value=currentPayer;
+  payer.onchange=()=>{currentPayer=Number(payer.value);renderPeople()};
 }
+function renderCategories(){
+  const box=document.getElementById('categoryChoices');box.innerHTML='';
+  const cats=['餐飲','交通','住宿','門票','購物','其他'],icons=['utensils','car','house','ticket','shopping-bag','ellipsis'];
+  cats.forEach((category,i)=>{const b=document.createElement('button');b.className='category-choice'+(document.getElementById('category').value===category?' active':'');b.dataset.category=category;b.innerHTML='<span>'+ICONS[icons[i]]+'</span>'+category;b.setAttribute('aria-pressed',String(document.getElementById('category').value===category));b.onclick=()=>{document.getElementById('category').value=category;renderCategories()};box.appendChild(b)});
+}
+function openSettings(){if(room)showTab('more');else document.getElementById('meSelect').focus()}
 function selectAll(){selected=[true,true,true,true,true];renderPeople()}
 async function addExpense(){
   if(!store||busy||!ready||!navigator.onLine) return;
-  const expense={title:document.getElementById('title').value.trim(),amount:document.getElementById('amount').value,payer:Number(document.getElementById('payer').value),participants:selected.flatMap((v,i)=>v?[i]:[]),category:document.getElementById('category').value};
+  const expense={title:document.getElementById('title').value.trim()||document.getElementById('category').value,amount:document.getElementById('amount').value,payer:Number(document.getElementById('payer').value),participants:selected.flatMap((v,i)=>v?[i]:[]),category:document.getElementById('category').value};
   try{TripCore.validate(expense)}catch(e){alert(e.message);return}
   const signature=JSON.stringify(expense);
   if(!pendingDraft || pendingDraft.signature!==signature) pendingDraft={signature,id:crypto.randomUUID()};
@@ -107,7 +116,9 @@ function renderAll(){
   if(!room)return;
   renderPeople();
   const c=calc();
-  document.getElementById("grandTotal").textContent=money(c.total);
+  document.getElementById("myPaid").textContent=money(c.paid[me]);
+  document.getElementById("myShare").textContent=money(c.shares[me]);
+  document.getElementById("grandTotal").innerHTML='<span class="currency">NT$</span>'+Number(c.total).toLocaleString("zh-TW",{maximumFractionDigits:2});
   document.getElementById("expenseCount").textContent=expenses.length;
   const html=expenses.map(e=>`<div class="expense">
     <div class="expense-title"><strong>${esc(e.title)}</strong><strong>${money(e.amount)}</strong></div>
@@ -116,9 +127,13 @@ function renderAll(){
   </div>`).join("");
   document.getElementById("expensesList").innerHTML=html||'<div class="small">還沒有帳目。</div>';
   document.getElementById("recentExpenses").innerHTML=(expenses.slice(0,3).map(e=>`<div class="expense"><div class="expense-title"><strong>${esc(e.title)}</strong><strong>${money(e.amount)}</strong></div><div class="expense-meta">${esc(names[e.payer])} 付款</div></div>`).join(""))||"還沒有帳目。";
-  document.getElementById("settlement").innerHTML=c.tx.length?c.tx.map(t=>`<div class="settle">${avatars[t.from]} <strong>${esc(names[t.from])}</strong> → ${avatars[t.to]} <strong>${esc(names[t.to])}</strong>　<strong>${money(t.amt)}</strong></div>`).join(""):(expenses.length?'<div class="notice success">大家剛好結清 🎉</div>':'還沒有帳目。');
+  document.getElementById('settlement').innerHTML=c.tx.length?c.tx.map(t=>'<div class="settle transfer-row">'+avatarHTML(t.from)+'<span class="transfer-names"><strong>'+esc(names[t.from])+'</strong> → '+esc(names[t.to])+'</span><strong>'+money(t.amt)+'</strong></div>').join(''):(expenses.length?'<div class="notice success">大家剛好結清 🎉</div>':'<div class="empty">記下第一筆支出，就能開始結算。</div>');
+  document.getElementById('transferCount').textContent=c.tx.length?'共 '+c.tx.length+' 筆轉帳，即可結清所有費用 🎉':'';
+  const maximum=Math.max(...c.shares,1);
+  document.getElementById('spendingBars').innerHTML=c.shares.map((n,i)=>'<div class="bar-row">'+avatarHTML(i)+'<span class="bar-name">'+esc(names[i])+'</span><div class="bar-track" aria-hidden="true"><div class="bar-fill" style="--bar:'+personColors[i]+';width:'+n/maximum*100+'%"></div></div><strong>'+money(n)+'</strong></div>').join('');
   document.getElementById("balances").innerHTML=c.net.map((v,i)=>`<div class="settle"><div class="spread"><span>${avatars[i]} <strong>${esc(names[i])}</strong></span><span>${v>=0?"應收 ":"應付 "}<strong>${money(Math.abs(v))}</strong></span></div></div>`).join("");
   bindDeletes();
+  renderIcons();
 }
 function bindDeletes(){
   document.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>removeExpense(b.dataset.delete));updateButtons();
@@ -138,9 +153,11 @@ async function installApp(){
   }
 }
 if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"}).catch(()=>{}));
 }
 initJoin();
+renderCategories();
+renderIcons();
 const savedMe=Number(preference('donggang_me'));
 if(Number.isInteger(savedMe)&&savedMe>=0&&savedMe<5)document.getElementById('meSelect').value=savedMe;
 window.addEventListener('offline',()=>{if(room)setStatus('目前離線，帳目可能不是最新；連線後才能新增或刪除。',false)});
