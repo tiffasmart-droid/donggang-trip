@@ -1,4 +1,4 @@
-const CACHE = 'donggang-supabase-github-v3';
+const CACHE = 'donggang-supabase-github-v4';
 const ASSETS = ['./', './index.html', './app.js', './core.js', './store.js', './config.js', './vendor/supabase.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 const allowed = new Set(ASSETS.map(path => new URL(path, self.registration.scope).href));
 self.addEventListener('install', event => {
