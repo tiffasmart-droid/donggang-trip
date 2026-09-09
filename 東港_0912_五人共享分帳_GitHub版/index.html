@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#7dd3fc">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="東港分帳">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>東港 9/12 小旅行｜共享分帳</title>
+<style>
+:root{
+  --sky:#dff5ff; --sea:#57b7e8; --deep:#075985; --navy:#0b3c5d;
+  --foam:#f7fdff; --card:rgba(255,255,255,.92); --line:#c9e9f7;
+  --sand:#fff3d6; --coral:#ff8d72; --green:#69c6a2; --text:#12364a;
+  --muted:#68889a; --shadow:0 12px 35px rgba(11,60,93,.12);
+}
+*{box-sizing:border-box}
+html{background:#cfefff}
+body{
+  margin:0; color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;
+  background:
+    radial-gradient(circle at 8% 8%,rgba(255,255,255,.85) 0 5%,transparent 5.4%),
+    linear-gradient(180deg,#aee5ff 0,#e9f9ff 34%,#dff6ff 100%);
+  min-height:100vh;
+}
+body:before{
+  content:""; position:fixed; inset:auto 0 0; height:27vh; z-index:-1;
+  background:
+    radial-gradient(120% 65% at 15% 100%,#1b86c6 0 35%,transparent 36%),
+    radial-gradient(110% 55% at 65% 100%,#4cb4e8 0 42%,transparent 43%),
+    linear-gradient(180deg,#8fdcff,#2f9bd4);
+  opacity:.88;
+}
+.app{max-width:760px;margin:0 auto;padding:14px 14px calc(110px + env(safe-area-inset-bottom))}
+.hero{
+  position:relative; overflow:hidden; min-height:210px;
+  background:linear-gradient(180deg,rgba(255,255,255,.46),rgba(255,255,255,.1));
+  border:1px solid rgba(255,255,255,.66); border-radius:28px;
+  padding:20px 18px 16px; box-shadow:var(--shadow); margin-bottom:14px;
+}
+.hero h1{font-size:34px;line-height:1.1;margin:4px 0 5px;color:#0a4e76}
+.hero .subtitle{font-size:14px;color:#356f8f}
+.tuna{
+  position:absolute; right:16px; bottom:9px; width:160px; height:85px;
+  transform:rotate(-8deg);
+}
+.tuna .body{
+  position:absolute; left:24px; top:18px; width:108px; height:52px;
+  border-radius:58% 45% 48% 58%;
+  background:linear-gradient(180deg,#327fb5 0 46%,#dff7ff 47% 100%);
+  border:3px solid #0b527c;
+}
+.tuna .tail{
+  position:absolute; left:0; top:23px; width:38px; height:43px;
+  clip-path:polygon(100% 50%,0 0,22% 50%,0 100%);
+  background:#1b6e9d; border-radius:8px;
+}
+.tuna .fin{
+  position:absolute; left:75px; top:4px; width:34px; height:24px;
+  clip-path:polygon(10% 100%,50% 0,100% 100%); background:#1f6d98;
+}
+.tuna .eye{position:absolute; right:17px; top:10px;width:10px;height:10px;background:#fff;border:3px solid #0b3c5d;border-radius:50%}
+.tuna .stripe{position:absolute;left:22px;right:12px;bottom:12px;height:3px;background:#8ecae6;transform:rotate(4deg)}
+.bubble{position:absolute;border-radius:50%;background:rgba(255,255,255,.75)}
+.b1{width:16px;height:16px;right:182px;bottom:62px}.b2{width:8px;height:8px;right:168px;bottom:83px}.b3{width:12px;height:12px;right:148px;bottom:101px}
+.wave{
+  position:absolute; left:-10%; right:-10%; bottom:-18px; height:54px;
+  background:radial-gradient(40px 22px at 40px 0,transparent 61%,rgba(255,255,255,.78) 64% 79%,transparent 82%) 0 0/80px 46px repeat-x;
+}
+.pill{display:inline-flex;gap:6px;align-items:center;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.72);font-size:13px;font-weight:700}
+.card{
+  background:var(--card); border:1px solid rgba(255,255,255,.82);
+  border-radius:22px; padding:16px; margin-bottom:12px; box-shadow:var(--shadow);
+  backdrop-filter:blur(10px);
+}
+h2,h3{margin:0 0 12px}
+h2{font-size:19px} h3{font-size:16px}
+label{display:block;color:var(--muted);font-size:13px;margin:10px 0 6px}
+input,select,button{font:inherit}
+input,select{
+  width:100%; border:1px solid var(--line); padding:14px 13px; min-height:48px; border-radius:14px;
+  background:#fff; color:var(--text); outline:none;
+}
+input:focus,select:focus{border-color:#5dbde9;box-shadow:0 0 0 3px rgba(93,189,233,.15)}
+button{
+  border:0;border-radius:14px;padding:13px 14px;min-height:46px;background:var(--deep);color:white;font-weight:750;cursor:pointer;touch-action:manipulation;
+}
+button.secondary{background:#e6f6fd;color:#0d5a83}
+button.danger{background:#fff0ed;color:#b4432f}
+button:disabled{opacity:.5}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.people{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.person{
+  border:1px solid var(--line);background:#fff;color:var(--text);
+  padding:9px 6px;border-radius:15px;text-align:center;font-size:12px;
+}
+.person .avatar{font-size:25px;display:block;margin-bottom:4px}
+.person.active{background:#dff5ff;border-color:#4eb6e3;box-shadow:inset 0 0 0 1px #4eb6e3}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spread{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.statgrid{display:grid;grid-template-columns:1.35fr .65fr;gap:10px}
+.stat{
+  background:linear-gradient(180deg,#effbff,#e5f7ff);padding:14px;border-radius:17px;border:1px solid #d8f0fb;
+}
+.amount{font-size:28px;font-weight:850;color:#0a4e76}
+.small{font-size:12px;color:var(--muted)}
+.expense{padding:13px 0;border-bottom:1px dashed #d7ebf4}
+.expense:last-child{border-bottom:0}
+.expense-title{display:flex;justify-content:space-between;gap:10px}
+.expense-meta{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.5}
+.settle{padding:12px;border-radius:14px;background:#f2fbff;margin:8px 0;border:1px solid #d9f0fa}
+.notice{padding:10px 12px;background:#fff7df;border:1px solid #ffe7a7;border-radius:14px;font-size:13px;color:#765b15}
+.success{background:#eafaf3;border-color:#bfead7;color:#256b4d}
+.hidden{display:none!important}
+.tabs{position:fixed;left:50%;bottom:0;transform:translateX(-50%);z-index:50;width:min(760px,100%);display:grid;grid-template-columns:1fr 1fr 78px 1fr 1fr;gap:0;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);backdrop-filter:blur(18px);border-top:1px solid #cfeaf6;box-shadow:0 -8px 26px rgba(11,60,93,.12)}
+.tab{background:transparent;color:#47768f;border:0;padding:8px 2px 6px;font-size:11px;border-radius:12px}
+.tab .ico{display:block;font-size:20px;line-height:1.1;margin-bottom:2px}
+.tab.active{background:#e6f6fd;color:#075985}
+.fab{align-self:start;justify-self:center;margin-top:-31px;width:64px;height:64px;border-radius:50%;background:linear-gradient(180deg,#1296d4,#086b9d);color:white;box-shadow:0 10px 24px rgba(8,107,157,.35);font-size:30px;display:flex;align-items:center;justify-content:center;border:5px solid white;padding:0}
+.fab-label{position:absolute;bottom:calc(9px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);font-size:10px;color:#075985;font-weight:800;pointer-events:none}
+.mobile-only{display:none}
+.center{text-align:center}
+.roomcode{font-size:30px;letter-spacing:6px;font-weight:900;color:#0c628f}
+.footer{color:#e7f8ff;text-shadow:0 1px 2px rgba(0,0,0,.25);text-align:center;font-size:12px;margin-top:18px}
+@media(max-width:560px){
+  body{padding-top:env(safe-area-inset-top)}
+  .app{padding:10px 10px calc(104px + env(safe-area-inset-bottom))}
+  .grid2{grid-template-columns:1fr}
+  .people{grid-template-columns:repeat(5,1fr);gap:5px}
+  .person{padding:8px 2px;font-size:11px;min-height:68px}
+  .person .avatar{font-size:22px}
+  .hero{min-height:180px;border-radius:22px;padding:16px 14px 14px}
+  .hero h1{font-size:28px}
+  .hero .subtitle{font-size:13px;max-width:55%}
+  .tuna{width:132px;right:4px;bottom:0}
+  .tuna .body{width:90px}
+  .tuna .fin{left:63px}
+  .card{padding:14px;border-radius:18px;margin-bottom:10px}
+  .statgrid{grid-template-columns:1fr 1fr}
+  .amount{font-size:24px}
+  .roomcode{font-size:26px}
+  .expense{padding:11px 0}
+  .expense-title{align-items:flex-start}
+  .expense-title strong:first-child{max-width:65%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mobile-only{display:block}
+  .tabs{width:100%}
+}
+
+label,.person,.tab,.notice,.pill{font-size:14px}.fab-label{font-size:12px}.small,.expense-meta{font-size:13px}button:focus-visible{outline:3px solid #e57939;outline-offset:2px}.notice{margin-bottom:12px}.notice button{padding:7px 10px;margin-left:6px} .person{overflow-wrap:anywhere} @media(max-width:360px){.people{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="hero">
+    <div class="pill">🌊 海風・鮪魚・好朋友</div>
+    <h1>東港小旅行</h1>
+    <div class="subtitle">9/12 週末｜5 人共享分帳｜台幣</div>
+    <div class="tuna" aria-label="鮪魚吉祥物">
+      <div class="tail"></div><div class="fin"></div><div class="body"><i class="eye"></i><i class="stripe"></i></div>
+    </div>
+    <i class="bubble b1"></i><i class="bubble b2"></i><i class="bubble b3"></i><div class="wave"></div>
+  </section>
+
+  <div id="joinPanel" class="card">
+    <h2>🐟 加入分帳房間</h2>
+    <div class="notice">五位旅伴共用 0912 帳本。選擇自己的身份後，即可開始記帳。</div>
+    <div class="grid2">
+      <div><label>房間碼</label><input id="roomInput" value="0912" readonly aria-label="房間碼"></div>
+      <div><label>你是誰</label><select id="meSelect"></select></div>
+    </div>
+    <label>固定旅伴（五支手機使用相同名單）</label>
+    <div id="nameInputs" class="grid2"></div>
+    <div class="row" style="margin-top:12px">
+      <button id="joinButton" onclick="joinRoom()">進入共享帳本</button>
+      
+    </div>
+  </div>
+
+  <div id="mainApp" class="hidden">
+<div class="notice" role="status" aria-live="polite"><span id="syncStatus">讀取帳目中…</span> <button class="secondary" onclick="refreshNow()">重新整理</button></div>
+    <div class="tabs">
+      <button class="tab active" data-tab="home" onclick="showTab('home')"><span class="ico">🏠</span>總覽</button>
+      <button class="tab" data-tab="list" onclick="showTab('list')"><span class="ico">📋</span>帳目</button>
+      <button class="fab" aria-label="新增支出" onclick="showTab('add')">＋</button>
+      <button class="tab" data-tab="settle" onclick="showTab('settle')"><span class="ico">🤝</span>結算</button>
+      <button class="tab" data-tab="more" onclick="showTab('more')"><span class="ico">🐟</span>更多</button>
+      <div class="fab-label">記一筆</div>
+    </div>
+
+    <section id="tab-home">
+      <div class="card">
+        <div class="spread"><div><div class="small">共享房間</div><div id="roomCode" class="roomcode">----</div></div>
+          <button class="secondary" onclick="copyInvite()">複製邀請文字</button></div>
+      </div>
+      <div class="card">
+        <div class="statgrid">
+          <div class="stat"><div class="small">目前總支出</div><div id="grandTotal" class="amount">NT$0</div></div>
+          <div class="stat"><div class="small">帳目</div><div id="expenseCount" class="amount">0</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>🐠 旅伴</h2><div id="memberCards" class="people"></div>
+      </div>
+      <div class="card">
+        <h2>最近帳目</h2><div id="recentExpenses" class="small">還沒有帳目。</div>
+      </div>
+    </section>
+
+    <section id="tab-add" class="hidden">
+      <div class="card">
+        <h2>🐟 記一筆支出</h2>
+        <div class="grid2">
+          <div><label>項目</label><input id="title" maxlength="60" aria-label="項目" placeholder="東港華僑市場、停車、民宿…"></div>
+          <div><label>金額（NT$）</label><input id="amount" type="number" inputmode="decimal" min="0.01" max="100000000" step="0.01" aria-label="金額" placeholder="0"></div>
+          <div><label>付款人</label><select id="payer"></select></div>
+          <div><label>分類</label><select id="category">
+            <option>餐飲</option><option>交通</option><option>住宿</option><option>門票</option><option>購物</option><option>其他</option>
+          </select></div>
+        </div>
+        <label>哪些人一起分這筆？</label><div id="splitPeople" class="people"></div>
+        <div class="row" style="margin-top:12px">
+          <button id="addButton" onclick="addExpense()">新增這筆支出</button>
+          <button class="secondary" onclick="selectAll()">5 人全選</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-list" class="hidden">
+      <div class="card"><h2>📋 全部帳目</h2><div id="expensesList"></div></div>
+    </section>
+
+    <section id="tab-settle" class="hidden">
+      <div class="card">
+        <h2>🤝 最少轉帳次數</h2>
+        <p class="small">依目前帳目計算；轉帳請自行完成。均分至小數兩位，餘分依成員編號分配。</p><div id="settlement" class="small">還沒有帳目。</div>
+      </div>
+      <div class="card"><h2>每人的帳務狀態</h2><div id="balances"></div></div>
+    </section>
+
+    <section id="tab-more" class="hidden">
+      <div class="card">
+        <h2>🐟 旅程設定</h2>
+        <div class="small" style="line-height:1.7">
+          房間碼：<strong id="roomCodeMore">----</strong><br>
+          旅程：東港 9/12 週末｜5 人｜台幣
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button class="secondary" onclick="copyInvite()">複製邀請文字</button>
+          <button class="secondary" onclick="installApp()">加入手機主畫面</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="spread"><div class="small">即時狀態：<span id="conn">連線中…</span></div>
+        <button class="danger" onclick="leaveRoom()">離開房間</button></div>
+      </div>
+    </section>
+  </div>
+  <div class="footer">東港的海，把帳分清楚，也把回憶留在一起。</div>
+</div>
+
+<script src="./vendor/supabase.js"></script>
+<script src="./config.js"></script>
+<script src="./core.js"></script>
+<script src="./store.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
